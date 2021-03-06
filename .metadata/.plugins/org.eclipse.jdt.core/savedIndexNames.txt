@@ -1,0 +1,3 @@
+INDEX VERSION 1.131+C:\guestbook-workspace\com-liferay-docs-guestbook\.metadata\.plugins\org.eclipse.jdt.core
+3385023265.index
+1667450455.index
