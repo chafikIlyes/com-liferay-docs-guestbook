@@ -9,6 +9,8 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
+import com.liferay.portal.kernel.servlet.SessionErrors;
+import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 
@@ -56,7 +58,7 @@ public class GuestbookPortlet extends MVCPortlet {
 	@Reference
 	private GuestbookLocalService _guestbookLocalService;
 	
-	public void addEntry(ActionRequest request, ActionResponse response)
+	public void addEntry (ActionRequest request, ActionResponse response)
             throws PortalException {
 
         ServiceContext serviceContext = ServiceContextFactory.getInstance(
@@ -78,10 +80,14 @@ public class GuestbookPortlet extends MVCPortlet {
 
             response.setRenderParameter(
                 "guestbookId", Long.toString(guestbookId));
+            
+            SessionMessages.add(request, "entryAdded");
 
         }
         catch (Exception e) {
             System.out.println(e);
+            
+            SessionErrors.add(request, e.getClass().getName());
 
             PortalUtil.copyRequestParameters(request, response);
 
@@ -111,7 +117,7 @@ public class GuestbookPortlet extends MVCPortlet {
         }
     }
 }
-	public void deleteEntry(ActionRequest request, ActionResponse response) throws PortalException {
+	public void deleteEntry (ActionRequest request, ActionResponse response) throws PortalException {
         long entryId = ParamUtil.getLong(request, "entryId");
         long guestbookId = ParamUtil.getLong(request, "guestbookId");
 
@@ -124,11 +130,14 @@ public class GuestbookPortlet extends MVCPortlet {
                 "guestbookId", Long.toString(guestbookId));
 
             _guestbookEntryLocalService.deleteGuestbookEntry(entryId);
+            
+            SessionMessages.add(request, "entryDeleted");
         }
 
         catch (Exception e) {
             Logger.getLogger(GuestbookPortlet.class.getName()).log(
                 Level.SEVERE, null, e);
+            SessionErrors.add(request, e.getClass().getName());
         }
 }
 	
