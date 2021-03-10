@@ -15,12 +15,15 @@ long guestbookId = Long.valueOf((Long) renderRequest
 
             for (int i = 0; i < guestbooks.size(); i++) {
 
-                Guestbook curGuestbook = (Guestbook) guestbooks.get(i);
+                Guestbook curGuestbook = guestbooks.get(i);
                 String cssClass = StringPool.BLANK;
 
                 if (curGuestbook.getGuestbookId() == guestbookId) {
                     cssClass = "active";
                 }
+
+                if (GuestbookModelPermission.contains(
+                    permissionChecker, curGuestbook.getGuestbookId(), "VIEW")) {
 
     %>
 
@@ -37,11 +40,13 @@ long guestbookId = Long.valueOf((Long) renderRequest
     <%  
                 }
 
+            }
     %>
 
 </aui:nav>
 
 <aui:button-row cssClass="guestbook-buttons">
+<c:if test='<%= GuestbookPermission.contains(permissionChecker, scopeGroupId, "ADD_ENTRY") %>'>
 
     <portlet:renderURL var="addEntryURL">
         <portlet:param name="mvcPath" value="/guestbookf/edit_entry.jsp" />
@@ -50,6 +55,7 @@ long guestbookId = Long.valueOf((Long) renderRequest
     </portlet:renderURL>
 
     <aui:button onClick="<%=addEntryURL.toString()%>" value="Add Entry"></aui:button>
+    </c:if>
 
 </aui:button-row>
 

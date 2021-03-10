@@ -22,6 +22,7 @@ import com.liferay.docs.guestbook.service.base.GuestbookEntryLocalServiceBaseImp
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.OrderByComparator;
@@ -36,31 +37,35 @@ import org.osgi.service.component.annotations.Component;
  * The implementation of the guestbook entry local service.
  *
  * <p>
- * All custom service methods should be put in this class. Whenever methods are added, rerun ServiceBuilder to copy their definitions into the <code>com.liferay.docs.guestbook.service.GuestbookEntryLocalService</code> interface.
+ * All custom service methods should be put in this class. Whenever methods are
+ * added, rerun ServiceBuilder to copy their definitions into the
+ * <code>com.liferay.docs.guestbook.service.GuestbookEntryLocalService</code>
+ * interface.
  *
  * <p>
- * This is a local service. Methods of this service will not have security checks based on the propagated JAAS credentials because this service can only be accessed from within the same VM.
+ * This is a local service. Methods of this service will not have security
+ * checks based on the propagated JAAS credentials because this service can only
+ * be accessed from within the same VM.
  * </p>
  *
  * @author liferay
  * @see GuestbookEntryLocalServiceBaseImpl
  */
-@Component(
-	property = "model.class.name=com.liferay.docs.guestbook.model.GuestbookEntry",
-	service = AopService.class
-)
-public class GuestbookEntryLocalServiceImpl
-	extends GuestbookEntryLocalServiceBaseImpl {
+@Component(property = "model.class.name=com.liferay.docs.guestbook.model.GuestbookEntry", service = AopService.class)
+public class GuestbookEntryLocalServiceImpl extends GuestbookEntryLocalServiceBaseImpl {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never reference this class directly. Use <code>com.liferay.docs.guestbook.service.GuestbookEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.docs.guestbook.service.GuestbookEntryLocalServiceUtil</code>.
+	 * Never reference this class directly. Use
+	 * <code>com.liferay.docs.guestbook.service.GuestbookEntryLocalService</code>
+	 * via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use
+	 * <code>com.liferay.docs.guestbook.service.GuestbookEntryLocalServiceUtil</code
+	 * >.
 	 */
-	
-	public GuestbookEntry addGuestbookEntry(long userId, long guestbookId, String name,
-			String email, String message, ServiceContext serviceContext)
-		throws PortalException {
+
+	public GuestbookEntry addGuestbookEntry(long userId, long guestbookId, String name, String email, String message,
+			ServiceContext serviceContext) throws PortalException {
 
 		long groupId = serviceContext.getScopeGroupId();
 
@@ -89,21 +94,22 @@ public class GuestbookEntryLocalServiceImpl
 
 		guestbookEntryPersistence.update(entry);
 
+		resourceLocalService.addResources(user.getCompanyId(), groupId, userId, GuestbookEntry.class.getName(), entryId,
+				false, true, true);
+
 		// Calls to other Liferay frameworks go here
 
 		return entry;
 	}
-	public GuestbookEntry updateGuestbookEntry(long userId, long guestbookId,
-			long entryId, String name, String email, String message,
-			ServiceContext serviceContext)
-		throws PortalException, SystemException {
+
+	public GuestbookEntry updateGuestbookEntry(long userId, long guestbookId, long entryId, String name, String email,
+			String message, ServiceContext serviceContext) throws PortalException, SystemException {
 
 		Date now = new Date();
 
 		validate(name, email, message);
 
-		GuestbookEntry entry =
-			guestbookEntryPersistence.findByPrimaryKey(entryId);
+		GuestbookEntry entry = guestbookEntryPersistence.findByPrimaryKey(entryId);
 
 		User user = userLocalService.getUserById(userId);
 
@@ -117,67 +123,81 @@ public class GuestbookEntryLocalServiceImpl
 
 		guestbookEntryPersistence.update(entry);
 
+		resourceLocalService.updateResources(user.getCompanyId(), serviceContext.getScopeGroupId(),
+				GuestbookEntry.class.getName(), entryId, serviceContext.getModelPermissions());
+		
+		resourceLocalService.updateResources(
+			      user.getCompanyId(), serviceContext.getScopeGroupId(), 
+			      GuestbookEntry.class.getName(), entryId, 
+			      serviceContext.getModelPermissions());
+
 		// Integrate with Liferay frameworks here.
 
 		return entry;
 	}
-	
-	
-	public GuestbookEntry deleteGuestbookEntry(GuestbookEntry entry) {
 
-			guestbookEntryPersistence.remove(entry);
+	public GuestbookEntry deleteGuestbookEntry (GuestbookEntry entry) {
 
-			return entry;
-		}
-
-		public GuestbookEntry deleteGuestbookEntry(long entryId) throws PortalException {
-
-			GuestbookEntry entry =
-				guestbookEntryPersistence.findByPrimaryKey(entryId);
-
-			return deleteGuestbookEntry(entry);
-		}
+		guestbookEntryPersistence.remove(entry);
 		
-		
-		public List<GuestbookEntry> getGuestbookEntries(long groupId, long guestbookId) {
-			return guestbookEntryPersistence.findByG_G(groupId, guestbookId);
+		try {
+			resourceLocalService.deleteResource(
+					   entry.getCompanyId(), GuestbookEntry.class.getName(),
+					   ResourceConstants.SCOPE_INDIVIDUAL, entry.getEntryId());
+		} catch (PortalException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 
-		public List<GuestbookEntry> getGuestbookEntries(long groupId, long guestbookId,
-				int start, int end) throws SystemException {
+		return entry;
+	}
 
-			return guestbookEntryPersistence.findByG_G(groupId, guestbookId, start,
-					end);
+	public GuestbookEntry deleteGuestbookEntry(long entryId) throws PortalException {
+
+		GuestbookEntry entry = guestbookEntryPersistence.findByPrimaryKey(entryId);
+
+		resourceLocalService.deleteResource(entry.getCompanyId(), GuestbookEntry.class.getName(),
+				ResourceConstants.SCOPE_INDIVIDUAL, entry.getEntryId());
+
+		return deleteGuestbookEntry(entry);
+	}
+
+	public List<GuestbookEntry> getGuestbookEntries(long groupId, long guestbookId) {
+		return guestbookEntryPersistence.findByG_G(groupId, guestbookId);
+	}
+
+	public List<GuestbookEntry> getGuestbookEntries(long groupId, long guestbookId, int start, int end)
+			throws SystemException {
+
+		return guestbookEntryPersistence.findByG_G(groupId, guestbookId, start, end);
+	}
+
+	public List<GuestbookEntry> getGuestbookEntries(long groupId, long guestbookId, int start, int end,
+			OrderByComparator<GuestbookEntry> obc) {
+
+		return guestbookEntryPersistence.findByG_G(groupId, guestbookId, start, end, obc);
+	}
+
+	public GuestbookEntry getGuestbookEntry(long entryId) throws PortalException {
+		return guestbookEntryPersistence.findByPrimaryKey(entryId);
+	}
+
+	public int getGuestbookEntriesCount(long groupId, long guestbookId) {
+		return guestbookEntryPersistence.countByG_G(groupId, guestbookId);
+	}
+
+	protected void validate(String name, String email, String entry) throws PortalException {
+
+		if (Validator.isNull(name)) {
+			throw new GuestbookEntryNameException();
 		}
 
-		public List<GuestbookEntry> getGuestbookEntries(long groupId, long guestbookId,
-				int start, int end, OrderByComparator<GuestbookEntry> obc) {
-
-			return guestbookEntryPersistence.findByG_G(groupId, guestbookId, start,
-					end, obc);
+		if (!Validator.isEmailAddress(email)) {
+			throw new GuestbookEntryEmailException();
 		}
 
-		public GuestbookEntry getGuestbookEntry(long entryId) throws PortalException {
-			return guestbookEntryPersistence.findByPrimaryKey(entryId);
+		if (Validator.isNull(entry)) {
+			throw new GuestbookEntryMessageException();
 		}
-
-		public int getGuestbookEntriesCount(long groupId, long guestbookId) {
-			return guestbookEntryPersistence.countByG_G(groupId, guestbookId);
-		}
-		
-		protected void validate(String name, String email, String entry)
-				throws PortalException {
-
-				if (Validator.isNull(name)) {
-					throw new GuestbookEntryNameException();
-				}
-
-				if (!Validator.isEmailAddress(email)) {
-					throw new GuestbookEntryEmailException();
-				}
-
-				if (Validator.isNull(entry)) {
-					throw new GuestbookEntryMessageException();
-				}
-			}
+	}
 }
