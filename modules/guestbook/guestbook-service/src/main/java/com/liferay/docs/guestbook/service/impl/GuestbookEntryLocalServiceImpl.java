@@ -14,6 +14,10 @@
 
 package com.liferay.docs.guestbook.service.impl;
 
+import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.asset.kernel.model.AssetLinkConstants;
+import com.liferay.asset.kernel.service.AssetEntryLocalService;
+import com.liferay.asset.kernel.service.AssetLinkLocalService;
 import com.liferay.docs.guestbook.exception.GuestbookEntryEmailException;
 import com.liferay.docs.guestbook.exception.GuestbookEntryMessageException;
 import com.liferay.docs.guestbook.exception.GuestbookEntryNameException;
@@ -27,6 +31,7 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -34,6 +39,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * The implementation of the guestbook entry local service.
@@ -100,6 +106,18 @@ public class GuestbookEntryLocalServiceImpl extends GuestbookEntryLocalServiceBa
 				false, true, true);
 
 		// Calls to other Liferay frameworks go here
+		AssetEntry assetEntry = assetEntryLocalService.updateEntry(userId,
+                groupId, entry.getCreateDate(), entry.getModifiedDate(),
+                GuestbookEntry.class.getName(), entryId, entry.getUuid(), 0,
+                serviceContext.getAssetCategoryIds(),
+                serviceContext.getAssetTagNames(), true, true, null, null, null, null,
+                ContentTypes.TEXT_HTML, entry.getMessage(), null, null, null,
+                null, 0, 0, null);
+
+		assetLinkLocalService.updateLinks(userId, assetEntry.getEntryId(),
+                serviceContext.getAssetLinkEntryIds(),
+                AssetLinkConstants.TYPE_RELATED);
+
 
 		return entry;
 	}
@@ -135,7 +153,21 @@ public class GuestbookEntryLocalServiceImpl extends GuestbookEntryLocalServiceBa
 			      serviceContext.getModelPermissions());
 
 		// Integrate with Liferay frameworks here.
+		
+		AssetEntry assetEntry = assetEntryLocalService.updateEntry(userId,
+	              serviceContext.getScopeGroupId(),
+	              entry.getCreateDate(), entry.getModifiedDate(),
+	              GuestbookEntry.class.getName(), entryId, entry.getUuid(),
+	              0, serviceContext.getAssetCategoryIds(),
+	              serviceContext.getAssetTagNames(), true, true,
+	              entry.getCreateDate(), null, null, null,
+	              ContentTypes.TEXT_HTML, entry.getMessage(), null,
+	              null, null, null, 0, 0,
+	              serviceContext.getAssetPriority());
 
+	assetLinkLocalService.updateLinks(userId, assetEntry.getEntryId(),
+	              serviceContext.getAssetLinkEntryIds(),
+	              AssetLinkConstants.TYPE_RELATED);
 		return entry;
 	}
 	
@@ -152,16 +184,25 @@ public class GuestbookEntryLocalServiceImpl extends GuestbookEntryLocalServiceBa
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		
 
 		return entry;
 	}
 
-	public GuestbookEntry deleteGuestbookEntry(long entryId) throws PortalException {
+	public GuestbookEntry deleteGuestbookEntry (long entryId) throws PortalException {
 
 		GuestbookEntry entry = guestbookEntryPersistence.findByPrimaryKey(entryId);
 
 		resourceLocalService.deleteResource(entry.getCompanyId(), GuestbookEntry.class.getName(),
 				ResourceConstants.SCOPE_INDIVIDUAL, entry.getEntryId());
+		
+		AssetEntry assetEntry = assetEntryLocalService.fetchEntry(
+                GuestbookEntry.class.getName(), entry.getEntryId());
+
+		assetLinkLocalService.deleteLinks(assetEntry.getEntryId());
+
+		assetEntryLocalService.deleteEntry(assetEntry);
 
 		return deleteGuestbookEntry(entry);
 	}
@@ -204,4 +245,12 @@ public class GuestbookEntryLocalServiceImpl extends GuestbookEntryLocalServiceBa
 			throw new GuestbookEntryMessageException();
 		}
 	}
+	
+	@Reference
+	protected AssetEntryLocalService assetEntryLocalService;
+	
+	@Reference
+	protected AssetLinkLocalService   assetLinkLocalService ;
+	
+	
 }
