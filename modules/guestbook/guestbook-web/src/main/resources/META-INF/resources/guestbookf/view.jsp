@@ -8,7 +8,26 @@ long guestbookId = Long.valueOf((Long) renderRequest
         .getAttribute("guestbookId"));
 %>
 
+<portlet:renderURL var="searchURL">
+    <portlet:param name="mvcPath" 
+    value="/guestbookf/view_search.jsp" />
+</portlet:renderURL>
+
 <aui:nav cssClass="nav-tabs">
+
+<aui:form action="${searchURL}" name="fm">
+
+    <div class="row">
+        <div class="col-md-8">
+            <aui:input inlineLabel="left" label="" name="keywords" placeholder="search-entries" size="256" />
+        </div>
+
+        <div class="col-md-4">
+            <aui:button type="submit" value="search" />
+        </div>
+    </div>
+
+ </aui:form>
 
     <%
         List<Guestbook> guestbooks = GuestbookLocalServiceUtil.getGuestbooks(scopeGroupId);
