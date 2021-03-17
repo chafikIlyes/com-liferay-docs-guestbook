@@ -19,7 +19,7 @@ long guestbookId = Long.valueOf((Long) renderRequest
 
     <div class="row">
         <div class="col-md-8">
-            <aui:input inlineLabel="left" label="" name="keywords" placeholder="search-entries" size="256" />
+            <aui:input inlineLabel="left" label="" name="keywords" placeholder="search-entries" size="120"  />
         </div>
 
         <div class="col-md-4">

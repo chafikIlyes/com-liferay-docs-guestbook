@@ -1,5 +1,6 @@
 <%@include file="../init.jsp"%>
 
+
 <%
   String keywords = ParamUtil.getString(request, "keywords");
   long guestbookId = ParamUtil.getLong(renderRequest, "guestbookId");
@@ -22,15 +23,7 @@
 
     <liferay-ui:header backURL="${viewURL}" title="back" />
 
-    <div class="row">
-        <div class="col-md-8">
-            <aui:input inlineLabel="left" label="" name="keywords" placeholder="search-entries" size="256" />
-        </div>
-
-        <div class="col-md-4">
-            <aui:button type="submit" value="search" />
-        </div>
-    </div>
+   
 </aui:form>
 
 <%
