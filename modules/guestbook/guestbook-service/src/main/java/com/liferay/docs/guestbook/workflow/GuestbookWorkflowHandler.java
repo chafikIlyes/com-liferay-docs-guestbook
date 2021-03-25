@@ -58,8 +58,10 @@ public class GuestbookWorkflowHandler extends BaseWorkflowHandler<Guestbook> {
         _guestbookLocalService = guestbookLocalService;
     }
 
+    @Reference
     private GuestbookLocalService _guestbookLocalService;
 
+    @Reference
 	private ResourceActions _resourceActions;
 
 }
